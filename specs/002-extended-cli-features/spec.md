@@ -102,6 +102,7 @@ Users want to run an MCP server through the CLI to expose all CLI capabilities (
   * `--date-format <format>`
 * **FR-103**: The `config show` command MUST display the current configuration. It MUST support the `--json` / `-j` flag (to output as raw JSON) and a new `--yaml` / `-y` flag (to output as raw YAML).
 * **FR-104**: The CLI MUST automatically parse and apply the selected number and date formatting rules to all float and date fields printed in stdout tables.
+* **FR-105**: The CLI MUST support a command `config remove <profile_name>` to permanently delete a connection profile from the configuration file, prompting for confirmation unless overridden, and updating the default profile accordingly.
 
 #### 2. Advanced Document Queries & Operations
 * **FR-201**: The `doc list <doctype>` command MUST support the following flags to filter, sort, and slice output results:
