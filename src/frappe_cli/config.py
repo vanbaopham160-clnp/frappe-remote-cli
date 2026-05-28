@@ -3,6 +3,10 @@ import os
 
 DEFAULT_CONFIG_PATH = os.path.expanduser("~/.frappe-cli.json")
 
+# Valid format enumerations
+VALID_DATE_FORMATS = {"us", "french", "german", "plain"}
+VALID_NUMBER_FORMATS = {"us", "french", "german", "plain"}
+
 
 def get_config_path() -> str:
     """Returns the default configuration file path."""
@@ -95,6 +99,31 @@ def save_profile_config(
     save_config(normalized, path)
 
 
+def remove_profile(profile_name: str, path: str = None) -> bool:
+    """Removes a named profile from the configuration.
+
+    Returns True if the profile was found and removed, False if not found.
+    If the removed profile was the default, resets default_profile to the first
+    remaining profile or 'default' if none remain.
+    """
+    config = load_config(path)
+    profiles = config.get("profiles", {})
+
+    if profile_name not in profiles:
+        return False
+
+    del profiles[profile_name]
+    config["profiles"] = profiles
+
+    # Reset default if we removed the active default
+    if config.get("default_profile") == profile_name:
+        remaining = list(profiles.keys())
+        config["default_profile"] = remaining[0] if remaining else "default"
+
+    save_config(config, path)
+    return True
+
+
 def validate_config(config_data: dict, profile_name: str = None) -> bool:
     """Validates configuration parameters for a profile."""
     if not isinstance(config_data, dict):
@@ -127,3 +156,28 @@ def validate_config(config_data: dict, profile_name: str = None) -> bool:
         return False
 
     return True
+
+
+def validate_date_format(fmt: str) -> bool:
+    """Returns True if fmt is a recognized date format label."""
+    return fmt in VALID_DATE_FORMATS
+
+
+def validate_number_format(fmt: str) -> bool:
+    """Returns True if fmt is a recognized number format label."""
+    return fmt in VALID_NUMBER_FORMATS
+
+
+def get_profile_formats(config: dict, profile_name: str = None) -> dict:
+    """Returns the date_format and number_format settings for a profile.
+
+    Falls back to 'plain' for each unset setting.
+    """
+    if not profile_name:
+        profile_name = config.get("default_profile", "default")
+    profiles = config.get("profiles", {})
+    profile = profiles.get(profile_name, {})
+    return {
+        "date_format": profile.get("date_format", "plain"),
+        "number_format": profile.get("number_format", "plain"),
+    }

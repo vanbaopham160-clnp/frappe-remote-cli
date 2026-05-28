@@ -21,6 +21,7 @@ dependencies = [
     "click>=8.0.0",
     "requests>=2.25.0",
     "tabulate>=0.8.0",
+    "mcp>=1.0.0",
 ]
 
 [project.urls]
@@ -46,6 +47,6 @@ target-version = "py310"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I"]
-ignore = ["E501"]
+ignore = ["E501", "E402", "F401"]
 
 
