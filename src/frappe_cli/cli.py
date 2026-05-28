@@ -210,6 +210,7 @@ def get_client() -> FrappeClient:
             )
         sys.exit(2)
     verify = not cli_no_verify and profile_config.get("verify", True)
+    click.echo(f"[Profile: {profile}]", err=True)
     return FrappeClient(
         url=profile_config["site_url"],
         api_key=profile_config["api_key"],
