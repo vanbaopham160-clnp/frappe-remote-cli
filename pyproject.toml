@@ -4,12 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "frappe-remote-cli"
-version = "0.1.5"
+version = "0.1.6"
 description = "A Click-based CLI to communicate with remote Frappe sites."
 readme = "README.md"
 authors = [
     { name = "Developer" }
 ]
+keywords = ["frappe", "cli", "click", "python", "api-client", "remote-connection"]
 requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
