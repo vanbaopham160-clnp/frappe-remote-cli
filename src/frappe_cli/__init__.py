@@ -1,0 +1,1 @@
+"""Frappe remote CLI package."""
