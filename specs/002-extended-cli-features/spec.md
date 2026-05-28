@@ -93,15 +93,89 @@ Users want to run an MCP server through the CLI to expose all CLI capabilities (
 
 ### Functional Requirements
 
-- **FR-001**: The CLI MUST support a configuration menu to set and persist default formatting options, including regional number formats (French, US, German, Plain) and date formats (ISO, European-dash, European-slash, US-slash).
-- **FR-002**: The CLI MUST automatically parse and apply number and date formatting configurations to all float/date columns printed in terminal tables.
-- **FR-003**: The CLI MUST support metadata listing commands for listing available desk reports (`list-reports`), listing system doctypes (`list-doctypes`), and counting records matching filters (`count-docs`).
-- **FR-004**: The CLI MUST support a report execution command (`run-report`) that queries query-report endpoints, parses the response (including array-of-arrays or array-of-objects structure), and outputs an aligned table.
-- **FR-005**: The CLI MUST support a schema retrieval command (`get-schema`) that dynamically resolves live site doctype configurations by merging Custom Field records and Property Setter overrides in-place.
-- **FR-006**: The CLI MUST support client-side bulk operations (`bulk-create`, `bulk-update`, `bulk-delete`) with user progress feedback (spinners/line counts) and a final success/failure summary table.
-- **FR-007**: The CLI MUST include an MCP command (`mcp`) implementing the Model Context Protocol to expose all commands as JSON-RPC tools.
-- **FR-008**: The MCP server MUST support a standard input/output (stdio) channel.
-- **FR-009**: The MCP server MUST support a background/detached HTTP mode, writing process details (PID, port, logs) to a state file (`mcp.json`), and offering control subcommands (`status`, `stop`) to manage the background daemon process group.
+#### 1. Configuration & Formatting Settings
+* **FR-101**: The CLI MUST support a configuration menu and option flags to set, persist, and retrieve default date and number formatting options in its profile configuration:
+  * Number formats: `french` (`1 000 000,00`), `us` (`1,000,000.00`), `german` (`1.000.000,00`), and `plain` (`1000000.00`).
+  * Date formats: `yyyy-mm-dd`, `dd-mm-yyyy`, `dd/mm/yyyy`, and `mm/dd/yyyy`.
+* **FR-102**: The `config set` command MUST support the following flags to update these preferences:
+  * `--number-format <format>`
+  * `--date-format <format>`
+* **FR-103**: The `config show` command MUST display the current configuration. It MUST support the `--json` / `-j` flag (to output as raw JSON) and a new `--yaml` / `-y` flag (to output as raw YAML).
+* **FR-104**: The CLI MUST automatically parse and apply the selected number and date formatting rules to all float and date fields printed in stdout tables.
+
+#### 2. Advanced Document Queries & Operations
+* **FR-201**: The `doc list <doctype>` command MUST support the following flags to filter, sort, and slice output results:
+  * `--fields` / `-f` (string; accepts a comma-separated list of fields or a JSON array string e.g. `["name","email"]` or `name,email`).
+  * `--filters` / `-q` (string; accepts a JSON dictionary `{"status":"Open"}` or a JSON array structure `[["status","=","Open"]]`).
+  * `--limit` / `-l` (integer; sets maximum records to return, defaulting to 20).
+  * `--order-by` / `-o` (string; sorting field and direction, e.g. `modified desc`).
+* **FR-202**: The `doc get <doctype> [name]` command MUST support:
+  * Optional `[name]` argument: if omitted, defaults to the `<doctype>` name automatically for Single DocTypes.
+  * `--fields` / `-f` (string; JSON array or CSV list of fields to output).
+  * `--keys` (string; comma-separated top-level JSON keys to keep in JSON output mode, e.g., `name,status`).
+* **FR-203**: The CLI MUST support a new command `doc count <doctype>`:
+  * Accept option `--filters` / `-q` (JSON filters dictionary or array).
+  * Print the plain count integer to stdout (or full count JSON envelope if `--json` is set).
+* **FR-204**: The `doc create <doctype>` and `doc update <doctype> <name>` commands MUST support:
+  * `--data` / `-d` (string JSON payload, required).
+  * `--keys` (string; comma-separated fields to print in JSON output).
+* **FR-205**: The `doc delete <doctype> <name>` command MUST support:
+  * `--yes` / `-y` (boolean flag to skip interactive delete confirmation prompt).
+
+#### 3. Client-Side Bulk Actions
+* **FR-301**: The CLI MUST support a new command `bulk create <doctype>`:
+  * `--data` / `-d` (string JSON array of field-value objects).
+  * `--file` / `-f` (filepath containing a JSON array of objects).
+* **FR-302**: The CLI MUST support a new command `bulk update <doctype>`:
+  * `--data` / `-d` (string JSON array of objects; each object must contain a `"name"` field identifying the record to update).
+  * `--file` / `-f` (filepath containing a JSON array of objects).
+* **FR-303**: The CLI MUST support a new command `bulk delete <doctype>`:
+  * `--names` (string; comma-separated list of document names to delete).
+  * `--file` / `-f` (filepath containing a JSON array of document name strings).
+  * `--yes` / `-y` (boolean flag to skip interactive delete confirmation prompt).
+* **FR-304**: All `bulk` commands MUST loop client-side, print an active spinner or line-by-line status update, continue processing remaining items if one fails, and print a final success/failure summary table listing item numbers, statuses, and names/errors.
+
+#### 4. Metadata Listings & Reporting Commands
+* **FR-401**: The CLI MUST support a new command `schema <doctype>` to display doctype schema metadata. It MUST support the following flags:
+  * `--full` (boolean; returns complete raw API response instead of compact view).
+  * `--keys` (string; comma-separated top-level keys to filter JSON output, e.g. `fields`).
+* **FR-402**: The `schema` fetch engine MUST query the base DocType schema and perform dynamic client-side merging:
+  * Query `Custom Field` records on the server and splice them into the base fields list according to their `insert_after` indices.
+  * Query `Property Setter` records on the server and override base dropdown `options` lists.
+* **FR-403**: The CLI MUST support a new command `meta doctypes` to list doctypes:
+  * `--module` / `-m` (string; filter doctypes by module name).
+  * `--limit` / `-l` (integer; maximum doctypes to return, defaulting to 50).
+* **FR-404**: The CLI MUST support a new command `meta reports` to list available desk reports:
+  * `--module` / `-m` (string; filter reports by module).
+  * `--limit` / `-l` (integer; maximum reports to return, defaulting to 50).
+* **FR-405**: The CLI MUST support a new command `report <report_name>` to execute reports:
+  * `--filters` (string; JSON object of report filter parameters).
+  * `--limit` / `-l` (integer; limit rows displayed in the output table).
+  * `--keys` (string; comma-separated keys to keep in JSON output mode).
+
+#### 5. Model Context Protocol (MCP) Server Integration
+* **FR-501**: The CLI MUST support a new command `mcp` implementing the Model Context Protocol to expose all commands as JSON-RPC tools:
+  * Ping tool (`ping`)
+  * Document retrieval tool (`get_doc` - doctype, optional name)
+  * Document list tool (`list_docs` - doctype, fields, filters, limit, order_by)
+  * Document creation tool (`create_doc` - doctype, data)
+  * Document update tool (`update_doc` - doctype, name, data)
+  * Document deletion tool (`delete_doc` - doctype, name)
+  * Document count tool (`count_docs` - doctype, filters)
+  * Schema retrieval tool (`get_schema` - doctype, full, keys)
+  * Doctype list tool (`list_doctypes` - module, limit)
+  * Report list tool (`list_reports` - module, limit)
+  * Report run tool (`run_report` - report_name, filters)
+  * Dotted method execution tool (`call_method` - method, args)
+  * Bulk creation tool (`bulk_create` - doctype, data)
+  * Bulk update tool (`bulk_update` - doctype, data)
+  * Bulk deletion tool (`bulk_delete` - doctype, names)
+* **FR-502**: The `mcp` command MUST run a standard input/output (stdio) server by default.
+* **FR-503**: The `mcp` command MUST support a `--detach` / `-d` flag to launch the server as a background HTTP daemon listening on localhost.
+* **FR-504**: The background daemon HTTP server MUST support the `--port` / `-p` option (defaulting to 8765).
+* **FR-505**: The CLI MUST support control commands to monitor and manage the background daemon:
+  * `mcp status`: Reads the state file (`mcp.json`) and prints daemon running status, PID, port, site profile, started timestamp, and log file path.
+  * `mcp stop`: Terminate the background daemon cleanly by sending SIGTERM to the PID retrieved from `mcp.json`.
 
 ### Key Entities *(include if feature involves data)*
 
