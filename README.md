@@ -18,8 +18,26 @@ A Python command-line utility built with Click and Requests to communicate with 
 
 Ensure you have Python 3.10+ installed.
 
+### Global Installation (Recommended)
+The easiest way to run the CLI globally is using [uv](https://github.com/astral-sh/uv) or [pipx](https://github.com/pypa/pipx):
+
+```bash
+# Install with uv
+uv tool install frappe-remote-cli
+
+# Or install with pipx
+pipx install frappe-remote-cli
+```
+
+Alternatively, you can install it using standard `pip`:
+```bash
+pip install frappe-remote-cli
+```
+
+### For Local Development
+If you want to modify or contribute to the codebase:
 1. Clone this repository.
-2. Initialize virtual environment and install the package in editable mode:
+2. Initialize virtual environment and install dependencies in editable mode:
 
 ```bash
 python3 -m venv .venv
