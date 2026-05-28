@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "frappe-remote-cli"
-version = "0.1.1"
+version = "0.1.2"
 description = "A Click-based CLI to communicate with remote Frappe sites."
 readme = "README.md"
 authors = [
@@ -21,6 +21,12 @@ dependencies = [
     "requests>=2.25.0",
     "tabulate>=0.8.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/vanbaopham160-clnp/frappe-remote-cli"
+Repository = "https://github.com/vanbaopham160-clnp/frappe-remote-cli.git"
+"Bug Tracker" = "https://github.com/vanbaopham160-clnp/frappe-remote-cli/issues"
+
 
 [project.optional-dependencies]
 dev = [
