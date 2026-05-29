@@ -88,9 +88,9 @@ def config():
 
 
 @config.command(name="set")
-@click.option("--site-url", prompt="Site URL", help="URL of the remote Frappe site")
-@click.option("--api-key", prompt="API Key", help="API Key")
-@click.option("--api-secret", prompt="API Secret", hide_input=True, help="API Secret")
+@click.option("--site-url", help="URL of the remote Frappe site")
+@click.option("--api-key", help="API Key")
+@click.option("--api-secret", help="API Secret")
 @click.option("--profile", default=None, help="Profile name (defaults to 'default')")
 @click.option(
     "--verify/--no-verify", default=True, help="Enable/disable SSL verification"
@@ -111,6 +111,48 @@ def config():
 def config_set(site_url, api_key, api_secret, profile, verify, date_format, number_format):
     """Save connection credentials, URL, and optional regional formats."""
     from frappe_cli.config import save_profile_config
+    import sys
+
+    # If no connection details are provided, run the full interactive TUI wizard
+    if site_url is None and api_key is None and api_secret is None:
+        from frappe_cli.config import is_interactive, prompt_profile_config
+        if is_interactive():
+            profile, data = prompt_profile_config()
+            save_profile_config(profile, data)
+            click.echo(f"Configuration saved successfully for profile '{profile}'!")
+            return
+        else:
+            click.echo("Error: Input is not a TTY. Interactive prompts are unavailable. Please provide the required arguments.", err=True)
+            sys.exit(1)
+
+    # Prompt for missing ones using InquirerPy if in interactive terminal
+    if not site_url or not api_key or not api_secret:
+        from frappe_cli.config import is_interactive
+        if not is_interactive():
+            click.echo("Error: Input is not a TTY. Interactive prompts are unavailable. Please provide the required arguments.", err=True)
+            sys.exit(1)
+
+        from InquirerPy import inquirer
+        try:
+            if not site_url:
+                site_url = inquirer.text(message="Site URL:", validate=lambda v: len(v.strip()) > 0 or "Site URL cannot be empty.").execute()
+                if site_url is None:
+                    raise KeyboardInterrupt()
+                site_url = site_url.strip()
+                if not site_url.startswith(("http://", "https://")):
+                    site_url = "https://" + site_url
+            if not api_key:
+                api_key = inquirer.text(message="API Key:", validate=lambda v: len(v.strip()) > 0 or "API Key cannot be empty.").execute()
+                if api_key is None:
+                    raise KeyboardInterrupt()
+                api_key = api_key.strip()
+            if not api_secret:
+                api_secret = inquirer.secret(message="API Secret:", validate=lambda v: len(v.strip()) > 0 or "API Secret cannot be empty.").execute()
+                if api_secret is None:
+                    raise KeyboardInterrupt()
+        except KeyboardInterrupt:
+            from frappe_cli.config import click_echo_err_exit
+            click_echo_err_exit()
 
     if not profile:
         profile = "default"
@@ -199,14 +241,22 @@ def config_check():
 
 
 @config.command(name="use")
-@click.argument("profile_name")
+@click.argument("profile_name", required=False)
 @handle_errors
 def config_use(profile_name):
     """Set the default configuration profile."""
-    from frappe_cli.config import save_config
+    from frappe_cli.config import save_config, is_interactive, prompt_profile_selection
 
     config = load_config()
     profiles = config.get("profiles", {})
+
+    if not profile_name:
+        if is_interactive():
+            profile_name = prompt_profile_selection(config, "Select profile to use:")
+        else:
+            click.echo("Error: Input is not a TTY. Interactive prompts are unavailable. Please provide the required arguments.", err=True)
+            sys.exit(1)
+
     if profile_name not in profiles:
         click.echo(f"Error: Profile '{profile_name}' is not configured.", err=True)
         sys.exit(2)
@@ -233,10 +283,30 @@ def config_list():
 
 
 @config.command(name="remove")
-@click.argument("profile_name")
+@click.argument("profile_name", required=False)
+@click.option("-y", "--yes", is_flag=True, default=False, help="Confirm deletion without prompting")
 @handle_errors
-def config_remove(profile_name):
+def config_remove(profile_name, yes):
     """Remove a named connection profile."""
+    from frappe_cli.config import is_interactive, prompt_profile_selection, prompt_confirm_deletion
+
+    config = load_config()
+    profiles = config.get("profiles", {})
+
+    if not profile_name:
+        if is_interactive():
+            profile_name = prompt_profile_selection(config, "Select profile to remove:")
+        else:
+            click.echo("Error: Input is not a TTY. Interactive prompts are unavailable. Please provide the required arguments.", err=True)
+            sys.exit(1)
+
+
+
+    if not yes and is_interactive():
+        if not prompt_confirm_deletion(profile_name):
+            click.echo("Operation canceled.")
+            return
+
     removed = remove_profile(profile_name)
     if removed:
         click.echo(f"Profile '{profile_name}' removed successfully.")

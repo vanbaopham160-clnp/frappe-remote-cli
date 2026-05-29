@@ -359,13 +359,42 @@ def test_cli_doc_list_table(mock_config_path):
 
 
 def test_config_set_interactive(mock_config_path):
+    from unittest.mock import MagicMock
     runner = CliRunner()
-    # Invoke without options, providing input interactively
-    result = runner.invoke(
-        main,
-        ["config", "set"],
-        input="https://interactive.site\nmy-interactive-key\nmy-interactive-secret\n",
-    )
+
+    with patch("frappe_cli.config.is_interactive", return_value=True), \
+         patch("InquirerPy.inquirer.text") as mock_text, \
+         patch("InquirerPy.inquirer.secret") as mock_secret, \
+         patch("InquirerPy.inquirer.select") as mock_select:
+
+        # mock_text is called 3 times: url, api_key, profile_name
+        mock_url_inst = MagicMock()
+        mock_url_inst.execute.return_value = "https://interactive.site"
+
+        mock_key_inst = MagicMock()
+        mock_key_inst.execute.return_value = "my-interactive-key"
+
+        mock_profile_inst = MagicMock()
+        mock_profile_inst.execute.return_value = "default"
+
+        mock_text.side_effect = [mock_url_inst, mock_key_inst, mock_profile_inst]
+
+        # mock_secret is called 1 time: api_secret
+        mock_sec_inst = MagicMock()
+        mock_sec_inst.execute.return_value = "my-interactive-secret"
+        mock_secret.return_value = mock_sec_inst
+
+        # mock_select is called 2 times: date_format, number_format
+        mock_date_inst = MagicMock()
+        mock_date_inst.execute.return_value = "plain"
+
+        mock_num_inst = MagicMock()
+        mock_num_inst.execute.return_value = "plain"
+
+        mock_select.side_effect = [mock_date_inst, mock_num_inst]
+
+        result = runner.invoke(main, ["config", "set"])
+
     assert result.exit_code == 0
     assert "Configuration saved successfully" in result.output
 

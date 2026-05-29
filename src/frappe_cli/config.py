@@ -181,3 +181,128 @@ def get_profile_formats(config: dict, profile_name: str = None) -> dict:
         "date_format": profile.get("date_format", "plain"),
         "number_format": profile.get("number_format", "plain"),
     }
+
+
+def is_interactive() -> bool:
+    """Returns True if the current process standard input and output is an interactive terminal."""
+    import sys
+    return sys.stdin.isatty() and sys.stdout.isatty()
+
+
+def prompt_profile_config():
+    """Run an interactive wizard using InquirerPy to collect profile settings.
+
+    Returns:
+        tuple: (profile_name, data_dict)
+    """
+    from InquirerPy import inquirer
+    import sys
+
+    try:
+        url = inquirer.text(
+            message="Site URL:",
+            validate=lambda val: len(val.strip()) > 0 or "Site URL cannot be empty."
+        ).execute()
+        if url is None:
+            raise KeyboardInterrupt()
+        url = url.strip()
+        if not url.startswith(("http://", "https://")):
+            url = "https://" + url
+
+        api_key = inquirer.text(
+            message="API Key:",
+            validate=lambda val: len(val.strip()) > 0 or "API Key cannot be empty."
+        ).execute()
+        if api_key is None:
+            raise KeyboardInterrupt()
+
+        api_secret = inquirer.secret(
+            message="API Secret:",
+            validate=lambda val: len(val.strip()) > 0 or "API Secret cannot be empty."
+        ).execute()
+        if api_secret is None:
+            raise KeyboardInterrupt()
+
+        date_format = inquirer.select(
+            message="Date Format:",
+            choices=["plain", "us", "french", "german"],
+            default="plain",
+        ).execute()
+        if date_format is None:
+            raise KeyboardInterrupt()
+
+        number_format = inquirer.select(
+            message="Number Format:",
+            choices=["plain", "us", "french", "german"],
+            default="plain",
+        ).execute()
+        if number_format is None:
+            raise KeyboardInterrupt()
+
+        profile_name = inquirer.text(
+            message="Profile Name:",
+            default="default",
+        ).execute()
+        if profile_name is None:
+            raise KeyboardInterrupt()
+        profile_name = profile_name.strip() or "default"
+
+        return profile_name, {
+            "site_url": url,
+            "api_key": api_key.strip(),
+            "api_secret": api_secret,
+            "verify": True,
+            "date_format": date_format,
+            "number_format": number_format,
+        }
+    except KeyboardInterrupt:
+        click_echo_err_exit()
+
+
+def click_echo_err_exit():
+    import click
+    import sys
+    click.echo("Operation canceled.", err=True)
+    sys.exit(1)
+
+
+def prompt_profile_selection(config_data: dict, message: str = "Select a profile:") -> str:
+    """Prompt the user to select one of the configured profiles.
+
+    Returns:
+        str: Selected profile name.
+    """
+    from InquirerPy import inquirer
+    import sys
+
+    profiles = list(config_data.get("profiles", {}).keys())
+    if not profiles:
+        import click
+        click.echo("Error: No profiles configured. Run 'frappe-cli config set' first.", err=True)
+        sys.exit(1)
+
+    try:
+        selection = inquirer.select(
+            message=message,
+            choices=profiles,
+        ).execute()
+        if selection is None:
+            raise KeyboardInterrupt()
+        return selection
+    except KeyboardInterrupt:
+        click_echo_err_exit()
+
+
+def prompt_confirm_deletion(profile_name: str) -> bool:
+    """Prompt the user to confirm deletion of a profile."""
+    from InquirerPy import inquirer
+    try:
+        confirm = inquirer.confirm(
+            message=f"Are you sure you want to remove profile '{profile_name}'?",
+            default=False,
+        ).execute()
+        if confirm is None:
+            raise KeyboardInterrupt()
+        return confirm
+    except KeyboardInterrupt:
+        click_echo_err_exit()
