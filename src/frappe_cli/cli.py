@@ -109,7 +109,10 @@ def config():
 )
 @handle_errors
 def config_set(site_url, api_key, api_secret, profile, verify, date_format, number_format):
-    """Save connection credentials, URL, and optional regional formats."""
+    """Save connection credentials, URL, and optional regional formats.
+
+    If invoked without options in an interactive terminal, launches a step-by-step TUI wizard.
+    """
     from frappe_cli.config import save_profile_config
     import sys
 
@@ -257,7 +260,10 @@ def config_check():
 @click.argument("profile_name", required=False)
 @handle_errors
 def config_use(profile_name):
-    """Set the default configuration profile."""
+    """Set the default configuration profile.
+
+    If PROFILE_NAME is omitted in an interactive terminal, displays a selection list of configured profiles.
+    """
     from frappe_cli.config import save_config, is_interactive, prompt_profile_selection
 
     config = load_config()
@@ -300,7 +306,10 @@ def config_list():
 @click.option("-y", "--yes", is_flag=True, default=False, help="Confirm deletion without prompting")
 @handle_errors
 def config_remove(profile_name, yes):
-    """Remove a named connection profile."""
+    """Remove a named connection profile.
+
+    If PROFILE_NAME is omitted in an interactive terminal, displays a selection list of configured profiles.
+    """
     from frappe_cli.config import is_interactive, prompt_profile_selection, prompt_confirm_deletion
 
     config = load_config()

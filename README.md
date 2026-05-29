@@ -89,7 +89,10 @@ pip install -e ".[dev]"
 ## Configuration
 
 ```bash
-# Set up a new profile (prompts interactively for missing arguments)
+# Set up a new profile (runs an interactive step-by-step TUI wizard when connection details are omitted)
+frappe-cli config set
+
+# Set up a new profile with partial command line flags (prompts interactively for the missing ones)
 frappe-cli config set --profile dev
 
 # Set configuration with specific regional formatting layouts
@@ -104,7 +107,10 @@ frappe-cli config set \
 # List all configured profiles
 frappe-cli config list
 
-# Select default profile
+# Select default profile (presents a list of configured profiles interactively when no profile name is provided)
+frappe-cli config use
+
+# Select default profile explicitly
 frappe-cli config use staging
 
 # Show configuration details (prints text, JSON, or YAML)
@@ -115,8 +121,14 @@ frappe-cli config show --format yaml
 # Verify remote site connection diagnostic
 frappe-cli config check
 
-# Remove a connection profile
+# Remove a connection profile (presents a list of configured profiles and a confirmation prompt when no profile name is provided)
+frappe-cli config remove
+
+# Remove a connection profile explicitly (bypasses safety confirmation prompts when in scripts/non-interactive environments)
 frappe-cli config remove production
+
+# Remove a connection profile explicitly and skip confirmation in interactive mode
+frappe-cli config remove production -y
 ```
 
 **Supported Date Formats:** `plain` (ISO default), `us` (`MM/DD/YYYY`), `french` (`DD/MM/YYYY`), `german` (`DD.MM.YYYY`)  
