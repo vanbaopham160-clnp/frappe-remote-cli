@@ -193,7 +193,7 @@ def run_prompt(prompt_obj):
     """Executes a prompt object and registers escape key to exit (returning None)."""
     @prompt_obj.register_kb("escape")
     def _(event):
-        event.app.exit()
+        event.app.exit(result=None)
     return prompt_obj.execute()
 
 
