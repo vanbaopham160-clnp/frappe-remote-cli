@@ -55,8 +55,8 @@ Perform bulk CRUD actions from local JSON payloads:
 # Create multiple ToDo documents from inline data
 frappe-cli bulk create ToDo --data '[{"description":"Review MR","priority":"Medium"},{"description":"Prepare release","priority":"High"}]'
 
-# Delete multiple ToDo items using a names list without prompting
-frappe-cli bulk delete ToDo --names "TD-0001,TD-0002" --yes
+# Delete multiple ToDo items using a names list
+frappe-cli bulk delete ToDo --names '["TD-0001","TD-0002"]'
 ```
 
 ---
