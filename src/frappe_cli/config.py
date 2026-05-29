@@ -189,6 +189,14 @@ def is_interactive() -> bool:
     return sys.stdin.isatty() and sys.stdout.isatty()
 
 
+def run_prompt(prompt_obj):
+    """Executes a prompt object and registers escape key to exit (returning None)."""
+    @prompt_obj.register_kb("escape")
+    def _(event):
+        event.app.exit()
+    return prompt_obj.execute()
+
+
 def prompt_profile_config():
     """Run an interactive wizard using InquirerPy to collect profile settings.
 
@@ -199,50 +207,53 @@ def prompt_profile_config():
     import sys
 
     try:
-        url = inquirer.text(
+        url = run_prompt(inquirer.text(
             message="Site URL:",
-            validate=lambda val: len(val.strip()) > 0 or "Site URL cannot be empty."
-        ).execute()
+            validate=lambda val: len(val.strip()) > 0,
+            invalid_message="Site URL cannot be empty."
+        ))
         if url is None:
             raise KeyboardInterrupt()
         url = url.strip()
         if not url.startswith(("http://", "https://")):
             url = "https://" + url
 
-        api_key = inquirer.text(
+        api_key = run_prompt(inquirer.text(
             message="API Key:",
-            validate=lambda val: len(val.strip()) > 0 or "API Key cannot be empty."
-        ).execute()
+            validate=lambda val: len(val.strip()) > 0,
+            invalid_message="API Key cannot be empty."
+        ))
         if api_key is None:
             raise KeyboardInterrupt()
 
-        api_secret = inquirer.secret(
+        api_secret = run_prompt(inquirer.secret(
             message="API Secret:",
-            validate=lambda val: len(val.strip()) > 0 or "API Secret cannot be empty."
-        ).execute()
+            validate=lambda val: len(val.strip()) > 0,
+            invalid_message="API Secret cannot be empty."
+        ))
         if api_secret is None:
             raise KeyboardInterrupt()
 
-        date_format = inquirer.select(
+        date_format = run_prompt(inquirer.select(
             message="Date Format:",
             choices=["plain", "us", "french", "german"],
             default="plain",
-        ).execute()
+        ))
         if date_format is None:
             raise KeyboardInterrupt()
 
-        number_format = inquirer.select(
+        number_format = run_prompt(inquirer.select(
             message="Number Format:",
             choices=["plain", "us", "french", "german"],
             default="plain",
-        ).execute()
+        ))
         if number_format is None:
             raise KeyboardInterrupt()
 
-        profile_name = inquirer.text(
+        profile_name = run_prompt(inquirer.text(
             message="Profile Name:",
             default="default",
-        ).execute()
+        ))
         if profile_name is None:
             raise KeyboardInterrupt()
         profile_name = profile_name.strip() or "default"
@@ -282,10 +293,10 @@ def prompt_profile_selection(config_data: dict, message: str = "Select a profile
         sys.exit(1)
 
     try:
-        selection = inquirer.select(
+        selection = run_prompt(inquirer.select(
             message=message,
             choices=profiles,
-        ).execute()
+        ))
         if selection is None:
             raise KeyboardInterrupt()
         return selection
@@ -297,10 +308,10 @@ def prompt_confirm_deletion(profile_name: str) -> bool:
     """Prompt the user to confirm deletion of a profile."""
     from InquirerPy import inquirer
     try:
-        confirm = inquirer.confirm(
+        confirm = run_prompt(inquirer.confirm(
             message=f"Are you sure you want to remove profile '{profile_name}'?",
             default=False,
-        ).execute()
+        ))
         if confirm is None:
             raise KeyboardInterrupt()
         return confirm

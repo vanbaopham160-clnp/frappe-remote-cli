@@ -133,21 +133,34 @@ def config_set(site_url, api_key, api_secret, profile, verify, date_format, numb
             sys.exit(1)
 
         from InquirerPy import inquirer
+        from frappe_cli.config import run_prompt
         try:
             if not site_url:
-                site_url = inquirer.text(message="Site URL:", validate=lambda v: len(v.strip()) > 0 or "Site URL cannot be empty.").execute()
+                site_url = run_prompt(inquirer.text(
+                    message="Site URL:",
+                    validate=lambda v: len(v.strip()) > 0,
+                    invalid_message="Site URL cannot be empty."
+                ))
                 if site_url is None:
                     raise KeyboardInterrupt()
                 site_url = site_url.strip()
                 if not site_url.startswith(("http://", "https://")):
                     site_url = "https://" + site_url
             if not api_key:
-                api_key = inquirer.text(message="API Key:", validate=lambda v: len(v.strip()) > 0 or "API Key cannot be empty.").execute()
+                api_key = run_prompt(inquirer.text(
+                    message="API Key:",
+                    validate=lambda v: len(v.strip()) > 0,
+                    invalid_message="API Key cannot be empty."
+                ))
                 if api_key is None:
                     raise KeyboardInterrupt()
                 api_key = api_key.strip()
             if not api_secret:
-                api_secret = inquirer.secret(message="API Secret:", validate=lambda v: len(v.strip()) > 0 or "API Secret cannot be empty.").execute()
+                api_secret = run_prompt(inquirer.secret(
+                    message="API Secret:",
+                    validate=lambda v: len(v.strip()) > 0,
+                    invalid_message="API Secret cannot be empty."
+                ))
                 if api_secret is None:
                     raise KeyboardInterrupt()
         except KeyboardInterrupt:
