@@ -1,6 +1,6 @@
 # Quickstart Guide: Extended Features and MCP Server
 
-This guide provides examples for utilizing regional formatting settings, dynamic schemas, reporting, bulk execution, and the Model Context Protocol (MCP) server features.
+This guide provides examples for utilizing regional formatting settings, document counting, dynamic schemas, reporting, bulk execution, and the Model Context Protocol (MCP) server features.
 
 ---
 
@@ -22,7 +22,21 @@ frappe-cli config show
 
 ---
 
-## 2. Dynamic Schema Retrieval
+## 2. Document Counting
+
+Count documents of a specified DocType matching any given filter constraints without pulling down the full datasets:
+
+```bash
+# Count total number of User documents
+frappe-cli doc count User
+
+# Count documents with specific filter criteria
+frappe-cli doc count ToDo --filters '[["status", "=", "Open"]]'
+```
+
+---
+
+## 3. Dynamic Schema Retrieval
 
 Examine the full, live database schema of a doctype, including customized standard fields, property setters, and custom fields spliced in their database order:
 
@@ -36,7 +50,7 @@ frappe-cli schema "Sales Invoice" --json --keys fields
 
 ---
 
-## 3. Query Reports Execution
+## 4. Query Reports Execution
 
 Execute server-side reports and view the results in the terminal:
 
@@ -47,7 +61,7 @@ frappe-cli report "General Ledger" --filters '{"company": "My Company", "from_da
 
 ---
 
-## 4. Bulk Creation and Deletion
+## 5. Bulk Creation and Deletion
 
 Perform bulk CRUD actions from local JSON payloads:
 
@@ -61,13 +75,13 @@ frappe-cli bulk delete ToDo --names '["TD-0001","TD-0002"]'
 
 ---
 
-## 5. Model Context Protocol (MCP) Server Setup
+## 6. Model Context Protocol (MCP) Server Setup
 
 ### Stdio Mode (local agents)
 Configure your LLM clients (like Claude Desktop or Cursor) to run the CLI directly in stdio mode:
 
 ```bash
-frappe-cli mcp --profile dev
+frappe-cli --profile dev mcp start --transport stdio
 ```
 
 ### Detached Daemon HTTP Mode
@@ -75,7 +89,7 @@ Run the server in the background as a daemon to allow HTTP connections:
 
 ```bash
 # Start background server on port 8765
-frappe-cli mcp --detach --port 8765
+frappe-cli mcp start --transport http --port 8765 --detach
 
 # Check status (retrieves PID, active profile, log file location)
 frappe-cli mcp status
@@ -83,3 +97,4 @@ frappe-cli mcp status
 # Shut down the background process group cleanly
 frappe-cli mcp stop
 ```
+
