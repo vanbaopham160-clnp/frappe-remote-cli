@@ -292,7 +292,7 @@ def prompt_profile_selection(config_data: dict, message: str = "Select a profile
     if not profiles:
         import click
         click.echo("Error: No profiles configured. Run 'frappe-cli config set' first.", err=True)
-        sys.exit(1)
+        sys.exit(2)
 
     try:
         selection = run_prompt(inquirer.select(
