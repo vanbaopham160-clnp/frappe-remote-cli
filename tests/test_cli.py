@@ -506,3 +506,11 @@ def test_no_verify_parameter(mock_config_path):
         assert result.exit_code == 0
         mock_client.assert_called_once()
         assert mock_client.call_args[1].get("verify") is False
+
+
+def test_cli_version_flag():
+    from frappe_cli import __version__
+    runner = CliRunner()
+    result = runner.invoke(main, ["--version"], prog_name="frappe-cli")
+    assert result.exit_code == 0
+    assert f"frappe-cli version {__version__}" in result.output

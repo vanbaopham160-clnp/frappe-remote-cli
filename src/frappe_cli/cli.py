@@ -4,6 +4,8 @@ import sys
 import click
 import requests
 
+from frappe_cli import __version__
+
 from frappe_cli.client import FrappeClient, FrappeException
 from frappe_cli.config import (
     get_profile_formats,
@@ -56,6 +58,7 @@ def get_global_option(name, default=None):
 
 
 @click.group()
+@click.version_option(version=__version__, message="%(prog)s version %(version)s")
 @click.option("--profile", default=None, help="Use a specific connection profile")
 @click.option(
     "--no-verify",
