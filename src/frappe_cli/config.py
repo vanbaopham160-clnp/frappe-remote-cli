@@ -253,6 +253,8 @@ def prompt_profile_config():
         profile_name = run_prompt(inquirer.text(
             message="Profile Name:",
             default="default",
+            validate=lambda val: len(val.strip()) > 0,
+            invalid_message="Profile Name cannot be empty."
         ))
         if profile_name is None:
             raise KeyboardInterrupt()
