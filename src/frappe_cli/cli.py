@@ -71,6 +71,12 @@ def main(ctx, profile, no_verify):
     ctx.obj["no_verify"] = no_verify
 
 
+@main.result_callback()
+def process_result(result, **kwargs):
+    from frappe_cli.version_check import check_for_updates
+    check_for_updates()
+
+
 # ---------------------------------------------------------------------------
 # config group
 # ---------------------------------------------------------------------------
