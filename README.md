@@ -13,7 +13,7 @@
   ██║     ██║  ██║██║  ██║██║     ██║     ███████╗    ╚██████╗███████╗██║
   ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝     ╚══════╝     ╚═════╝╚══════╝╚═╝
 
-                     Frappe Remote CLI  ·  frappe-cli  ·  v0.1.8
+                     Frappe Remote CLI  ·  frappe-cli  ·  v0.1.9
               Query · Format · Merge · Automate — all via REST & MCP
 ```
 
