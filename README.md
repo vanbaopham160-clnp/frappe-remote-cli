@@ -1,52 +1,84 @@
-# Frappe Remote CLI Tool
+# frappe-remote-cli
 
-A Python command-line utility built with Click and Requests to communicate with a remote Frappe site (v15).
+[![PyPI version](https://img.shields.io/pypi/v/frappe-remote-cli.svg)](https://pypi.org/project/frappe-remote-cli/)
+[![Python](https://img.shields.io/pypi/pyversions/frappe-remote-cli.svg)](https://pypi.org/project/frappe-remote-cli/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Tests](https://img.shields.io/badge/tests-128%20passing-brightgreen.svg)](#running-tests)
 
-## Features
+```
+  ███████╗██████╗  █████╗ ██████╗ ██████╗ ███████╗     ██████╗██╗     ██╗
+  ██╔════╝██╔══██╗██╔══██╗██╔══██╗██╔══██╗██╔════╝    ██╔════╝██║     ██║
+  █████╗  ██████╔╝███████║██████╔╝██████╔╝█████╗      ██║     ██║     ██║
+  ██╔══╝  ██╔══██╗██╔══██║██╔═══╝ ██╔═══╝ ██╔══╝      ██║     ██║     ██║
+  ██║     ██║  ██║██║  ██║██║     ██║     ███████╗    ╚██████╗███████╗██║
+  ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝     ╚══════╝     ╚═════╝╚══════╝╚═╝
 
-- **Local Configuration**: Securely store connection URLs and API credentials locally in `~/.frappe-cli.json` (permissions enforced at `0600`). Supports multiple site profiles.
-- **Regional Formatting**: Output dates and numbers in locale-specific formats — US, French, German, or plain ISO.
-- **Interactive Prompts**: Prompts you for configuration parameters when setting up connection configs if options are omitted.
-- **SSL Verification Control**: Bypass SSL certificate validation using the `--no-verify` option for local or development environments.
-- **Remote RPC Executions**: Call any remote whitelisted Python methods on the site via `frappe.call`.
-- **REST DocType CRUD**: Query, fetch, insert, update, or delete DocType records using clean subcommand interfaces.
-- **Document Count**: Count documents matching any filter set without fetching all records.
-- **Bulk Operations**: Create, update, or delete multiple documents in a single command call with a progress summary table.
-- **Metadata Listings**: List all available DocTypes or Reports visible to the current user.
-- **Report Execution**: Run Frappe query or script reports by name with optional filter parameters.
-- **Dynamic Schema Resolution**: Fetch the fully merged field schema for any DocType — base fields, custom fields, and property setter overrides — in a single command.
-- **MCP Server**: Expose all CLI operations as native Model Context Protocol (MCP) tools for AI agent integration — via stdio or a detached HTTP daemon.
-- **Rich Formatting**: Display API responses in raw JSON format by default (ideal for scripting/piping), with an optional `-t` / `--table` toggle flag to print formatted human-readable ASCII tables.
-- **Robust Exception Handling**: Clean terminal error formatting without raw stack traces.
+                     Frappe Remote CLI  ·  frappe-cli  ·  v0.1.6
+              Query · Format · Merge · Automate — all via REST & MCP
+```
+
+**A professional, feature-rich Python CLI and Model Context Protocol (MCP) server to query, inspect, and update remote [Frappe](https://frappeframework.com/) sites directly from the terminal or your favorite AI agent.**
+
+Built with Python, [Click](https://click.palletsprojects.com/), [Requests](https://requests.readthedocs.io/), and [Tabulate](https://pypi.org/project/tabulate/). Fully isolated, robustly tested, and developer-friendly.
+
+---
+
+## Two Interfaces in One
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                          frappe-cli                                 │
+├──────────────────────────────┬──────────────────────────────────────┤
+│   💻  TERMINAL CLI COMMANDS  │   🤖  MODEL CONTEXT PROTOCOL (MCP)   │
+│                              │                                      │
+│  config set/show/use/remove  │  doc_list / doc_get / doc_count      │
+│  doc list/get/create/delete  │  get_schema / run_report / call_method│
+│  doc count                   │  bulk_create / bulk_update / bulk_del│
+│  bulk create/update/delete   │  stdio / background HTTP daemon      │
+│  schema <doctype>            │  exposes all remote site tools to LLMs│
+│  report <name>               │  seamless Cursor/Claude integration  │
+└──────────────────────────────┴──────────────────────────────────────┘
+```
+
+---
+
+## Highlights
+
+- **Multi-Profile Configuration Manager:** Securely store connection credentials for multiple remote sites in `~/.frappe-cli.json` (enforced with strict `0600` file permissions).
+- **Regional Formatting Engine:** Automatically formats date strings (`us`, `french`, `german`, `plain`) and float cells in terminal output tables on-the-fly.
+- **Dynamic 3-Pass Schema Resolution:** Fetches standard fields, splices in Custom Fields at their correct layout indices, and overrides Select dropdown choices using `Property Setter` data directly from the live database.
+- **Sequential Client-Side Bulk Actions:** Automate imports and mass deletions using JSON inline strings or `@filepath` references, featuring real-time spinner feedback and success tables.
+- **Desk Reports in Terminal:** Run server-side SQL query or script reports, zip matching columns, and output clean formatted tables.
+- **Built-in PyPI Update Checker:** Automatically checks for library upgrades once a day in the background, printing helpful upgrade instructions without slowing down commands.
+- **Full Model Context Protocol (MCP) Server:** Exposes 15 tools to AI coding agents (Claude Desktop, Cursor, etc.) via stdio or a detached HTTP/SSE background daemon.
 
 ---
 
 ## Installation
 
-Ensure you have Python 3.10+ installed.
-
-### Global Installation (Recommended)
-The easiest way to run the CLI globally is using [uv](https://github.com/astral-sh/uv) or [pipx](https://github.com/pypa/pipx):
-
+### Globally via [uv](https://github.com/astral-sh/uv) (Recommended)
 ```bash
-# Install with uv
+# Install tool globally
 uv tool install frappe-remote-cli
 
-# Or install with pipx
+# Verify installation
+frappe-cli --help
+```
+
+### Globally via `pipx` or standard `pip`
+```bash
+# Using pipx
 pipx install frappe-remote-cli
+
+# Using standard pip
+pip install --user frappe-remote-cli
 ```
 
-Alternatively, you can install it using standard `pip`:
+### Local Development
+To set up a local virtual environment for development or custom builds:
 ```bash
-pip install frappe-remote-cli
-```
-
-### For Local Development
-If you want to modify or contribute to the codebase:
-1. Clone this repository.
-2. Initialize virtual environment and install dependencies in editable mode:
-
-```bash
+git clone https://github.com/vanbaopham160-clnp/frappe-remote-cli.git
+cd frappe-remote-cli
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
@@ -54,209 +86,127 @@ pip install -e ".[dev]"
 
 ---
 
-## Usage
-
-Verify the CLI is registered in your path:
+## Configuration
 
 ```bash
-frappe-cli --help
-```
+# Set up a new profile (prompts interactively for missing arguments)
+frappe-cli config set --profile dev
 
-### Global Options
-
-You can specify these options before any subcommand:
-- `--profile <name>`: Run the command against a specific profile configuration.
-- `--no-verify`: Disable SSL certificate verification (useful for self-signed certificates).
-
----
-
-### 1. Configuration Setup
-
-```bash
-# Set connection parameters (prompts interactively for missing arguments)
-frappe-cli config set \
-  --site-url "https://my-frappe-site.com" \
-  --api-key "ab12cd34ef56" \
-  --api-secret "gh78ij90kl12" \
-  --profile production
-
-# Set connection with regional formatting preferences
+# Set configuration with specific regional formatting layouts
 frappe-cli config set \
   --site-url "https://my-frappe-site.com" \
   --api-key "ab12cd34ef56" \
   --api-secret "gh78ij90kl12" \
   --date-format french \
-  --number-format german
+  --number-format german \
+  --profile production
 
 # List all configured profiles
 frappe-cli config list
 
-# Switch default profile
+# Select default profile
 frappe-cli config use staging
 
-# Inspect active profile (text, json, or yaml output)
+# Show configuration details (prints text, JSON, or YAML)
 frappe-cli config show
 frappe-cli config show --format json
 frappe-cli config show --format yaml
 
-# Remove a profile
-frappe-cli config remove staging
-
-# Run connection diagnostic for active profile
+# Verify remote site connection diagnostic
 frappe-cli config check
+
+# Remove a connection profile
+frappe-cli config remove production
 ```
 
-**Supported format values**: `plain` (ISO default), `us`, `french`, `german`
+**Supported Date Formats:** `plain` (ISO default), `us` (`MM/DD/YYYY`), `french` (`DD/MM/YYYY`), `german` (`DD.MM.YYYY`)  
+**Supported Number Formats:** `plain` (`1234567.89`), `us` (`1,234,567.89`), `french` (`1 234 567,89`), `german` (`1.234.567,89`)
 
 ---
 
-### 2. Method Execution (`call`)
+## Usage Guide
 
-Trigger any remote method decorated with `@frappe.whitelist()`:
+### 1. Document CRUD Commands (`doc`)
+Perform operations on individual document records. Toggle table output with `--table` / `-t`.
 
 ```bash
-# Check logged-in user
-frappe-cli call frappe.auth.get_logged_user
-
-# Execute method with key-value parameters
-frappe-cli call my_app.api.add -p a 10 -p b 20
-
-# Format output as table instead of default JSON
-frappe-cli call frappe.auth.get_logged_user --table
-```
-
----
-
-### 3. Document CRUD (`doc`)
-
-#### List records:
-```bash
+# List documents with filtering, field subsetting, and sorting
 frappe-cli doc list Customer --fields "name,customer_name,creation" --table
-```
 
-#### Count records:
-```bash
-# Count all customers
-frappe-cli doc count Customer
+# Get document count matching filters
+frappe-cli doc count Customer -q '[["disabled", "=", "0"]]'
 
-# Count with filters
-frappe-cli doc count Customer -q '[["disabled","=","0"]]'
-```
-
-#### Get record:
-```bash
+# Fetch specific document detail
 frappe-cli doc get Customer CUST-0001 --table
-```
 
-#### Create record:
-```bash
+# Create a new document record
 frappe-cli doc create Customer -d '{"customer_name": "Alice", "customer_type": "Individual"}'
-```
 
-#### Update record:
-```bash
+# Update fields on a document
 frappe-cli doc update Customer CUST-0001 -d '{"phone": "+1234567890"}'
-```
 
-#### Delete record:
-```bash
+# Delete a document record
 frappe-cli doc delete Customer CUST-0001
 ```
 
----
-
-### 4. Bulk Operations (`bulk`)
-
-Operate on multiple documents in a single call. Results are displayed as a summary table with per-record status.
+### 2. Client-Side Bulk Operations (`bulk`)
+Create, update, or delete batches of documents sequentially with progress spinners.
 
 ```bash
-# Bulk create from a JSON array
-frappe-cli bulk create Customer -d '[
-  {"customer_name": "Alice", "customer_type": "Individual"},
-  {"customer_name": "Bob", "customer_type": "Company"}
+# Bulk create from inline JSON
+frappe-cli bulk create ToDo -d '[
+  {"description": "Task A", "priority": "High"},
+  {"description": "Task B", "priority": "Medium"}
 ]'
 
-# Bulk create from a JSON file
-frappe-cli bulk create Customer -d @customers.json
+# Bulk create from a local JSON file path
+frappe-cli bulk create ToDo -d @tasks.json
 
-# Bulk update (each record must include 'name')
-frappe-cli bulk update Customer -d '[
-  {"name": "CUST-0001", "phone": "123"},
-  {"name": "CUST-0002", "phone": "456"}
-]'
+# Bulk update (each record must contain the 'name' field)
+frappe-cli bulk update ToDo -d @updates.json
 
-# Bulk delete by name list
-frappe-cli bulk delete Customer -n '["CUST-0001", "CUST-0002"]'
-frappe-cli bulk delete Customer -n @names.json
+# Bulk delete by list of document names
+frappe-cli bulk delete ToDo --names '["TD-0001", "TD-0002"]'
 ```
 
----
-
-### 5. Metadata (`meta`)
-
-```bash
-# List all DocTypes
-frappe-cli meta doctypes --table
-
-# List with filters
-frappe-cli meta doctypes -q '[["module","=","Selling"]]' --table
-
-# List all Reports
-frappe-cli meta reports --table
-```
-
----
-
-### 6. Report Execution (`report`)
+### 3. Server Reports Execution (`report`)
+Execute whitelisted Frappe query or script reports.
 
 ```bash
-# Run a report (JSON output by default)
-frappe-cli report "General Ledger"
-
-# Run with filters and show as table
-frappe-cli report "Sales Order Summary" -p company "My Company" --table
-
-# Multiple filter parameters
+# Run report with multiple key-value parameters and output table
 frappe-cli report "Accounts Payable" \
   -p company "My Company" \
-  -p report_date "2024-12-31" \
+  -p report_date "2026-05-31" \
   --table
 ```
 
----
-
-### 7. Schema Resolution (`schema`)
-
-Fetch the merged schema for a DocType — base fields, custom fields (injected at their correct positions), and Property Setter overrides (e.g. Select option changes) — all in one command.
+### 4. Live Schema Introspection (`schema`)
+Query the live merged fields dictionary of a DocType.
 
 ```bash
-# Compact view (default): key field attributes only
+# Display formatted fields schema table (standard + custom fields + property setters)
 frappe-cli schema Customer --table
 
-# Full view: all field attributes
-frappe-cli schema Customer --full --table
+# Output complete raw JSON schema response
+frappe-cli schema Customer --full
+```
 
-# JSON output for scripting
-frappe-cli schema Customer
+### 5. Remote RPC Execution (`call`)
+Invoke whitelisted Python method APIs on the site:
+```bash
+frappe-cli call frappe.auth.get_logged_user --table
+frappe-cli call my_app.api.calculate -p a 10 -p b 20
 ```
 
 ---
 
-### 8. MCP Server
+## Model Context Protocol (MCP) Server Setup
 
-Expose all CLI operations as [Model Context Protocol](https://modelcontextprotocol.io) tools for use with AI assistants (e.g. Claude Desktop, Cursor, etc.).
+Bridge your Frappe sites to LLM environments seamlessly.
 
-#### Available MCP Tools (15):
-`doc_list`, `doc_get`, `doc_create`, `doc_update`, `doc_delete`, `doc_count`, `call`, `meta_doctypes`, `meta_reports`, `run_report`, `get_schema`, `bulk_create`, `bulk_update`, `bulk_delete`, `check_connection`
+### Stdio Transport Mode (Claude Desktop, Cursor)
+Expose tools via standard input/output. Add the following to your `claude_desktop_config.json`:
 
-#### Stdio transport (for AI agent integration):
-```bash
-# Start MCP server on stdio (blocking — used by AI assistants directly)
-frappe-cli mcp start
-frappe-cli mcp start --transport stdio
-```
-
-Example MCP config for Claude Desktop (`claude_desktop_config.json`):
 ```json
 {
   "mcpServers": {
@@ -268,60 +218,31 @@ Example MCP config for Claude Desktop (`claude_desktop_config.json`):
 }
 ```
 
-#### HTTP daemon transport:
-```bash
-# Start as a background HTTP daemon (port 8765 by default)
-frappe-cli mcp start --transport http --detach
+### Detached HTTP Daemon Mode
+Run a persistent server in the background for remote HTTP SSE clients:
 
-# Check daemon status
+```bash
+# Start background server daemon on port 8765
+frappe-cli mcp start --transport http --port 8765 --detach
+
+# Check daemon PID, port, logs, and uptime
 frappe-cli mcp status
 
-# Stop the daemon
+# Shut down the background process group cleanly
 frappe-cli mcp stop
 ```
 
-Daemon state is persisted to `~/.config/frappe-cli/mcp.json`.
+*Daemon configuration and pid states are written to `~/.config/frappe-cli/mcp.json`.*
 
 ---
 
 ## Running Tests
 
-Run the full test suite (unit + integration):
-
+Run the full pytest suite (unit tests + request mocking):
 ```bash
+# Run all tests
 pytest
 
-# Unit tests only
-pytest tests/unit/
-
-# With verbose output
+# Verbose test runner
 pytest -v
-```
-
----
-
-## Configuration File Format
-
-The config file is stored at `~/.frappe-cli.json`:
-
-```json
-{
-  "default_profile": "production",
-  "profiles": {
-    "production": {
-      "site_url": "https://my-frappe-site.com",
-      "api_key": "...",
-      "api_secret": "...",
-      "verify": true,
-      "date_format": "french",
-      "number_format": "german"
-    },
-    "staging": {
-      "site_url": "https://staging.my-frappe-site.com",
-      "api_key": "...",
-      "api_secret": "...",
-      "verify": false
-    }
-  }
-}
 ```
