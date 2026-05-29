@@ -3,7 +3,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/frappe-remote-cli.svg)](https://pypi.org/project/frappe-remote-cli/)
 [![Python](https://img.shields.io/pypi/pyversions/frappe-remote-cli.svg)](https://pypi.org/project/frappe-remote-cli/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-128%20passing-brightgreen.svg)](#running-tests)
+[![Tests](https://img.shields.io/badge/tests-131%20passing-brightgreen.svg)](#running-tests)
 
 ```
   ███████╗██████╗  █████╗ ██████╗ ██████╗ ███████╗     ██████╗██╗     ██╗
@@ -196,6 +196,16 @@ Invoke whitelisted Python method APIs on the site:
 ```bash
 frappe-cli call frappe.auth.get_logged_user --table
 frappe-cli call my_app.api.calculate -p a 10 -p b 20
+```
+
+### 6. CLI Self-Upgrade (`update`)
+Check for package updates and upgrade the local installation directly in place:
+```bash
+# Check if a new version is available on PyPI
+frappe-cli update --check
+
+# Upgrade the CLI to the latest version immediately (without confirmation prompt)
+frappe-cli update --yes
 ```
 
 ---

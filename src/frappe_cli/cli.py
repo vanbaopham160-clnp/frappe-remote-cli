@@ -768,3 +768,62 @@ def mcp_stop():
         click.echo("MCP daemon stopped.")
     else:
         click.echo("MCP daemon was not running.")
+
+
+@main.command(name="update")
+@click.option(
+    "--check",
+    is_flag=True,
+    default=False,
+    help="Check for updates without installing",
+)
+@click.option(
+    "-y",
+    "--yes",
+    "assume_yes",
+    is_flag=True,
+    default=False,
+    help="Update without interactive confirmation",
+)
+@handle_errors
+def update_cmd(check, assume_yes):
+    """Update frappe-remote-cli to the latest PyPI version."""
+    from frappe_cli.version_check import fetch_latest_pypi_version, parse_version
+    from frappe_cli import __version__
+    import subprocess
+    import sys
+
+    click.echo("Checking for updates...")
+    latest_version = fetch_latest_pypi_version()
+    if not latest_version:
+        click.echo("Error: Could not retrieve latest version from PyPI.", err=True)
+        sys.exit(1)
+
+    if parse_version(latest_version) <= parse_version(__version__):
+        click.echo(f"Your CLI version ({__version__}) is already up to date!")
+        return
+
+    click.echo(f"A new version is available: {__version__} -> {latest_version}")
+    if check:
+        return
+
+    if not assume_yes:
+        if not click.confirm("Do you want to update now?", default=True):
+            click.echo("Update canceled.")
+            return
+
+    click.echo("Upgrading frappe-remote-cli via pip...")
+    try:
+        # Run pip upgrade using active python interpreter
+        res = subprocess.run(
+            [sys.executable, "-m", "pip", "install", "--upgrade", "frappe-remote-cli"],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        click.echo(res.stdout)
+        click.echo(click.style("Upgrade completed successfully!", fg="green"))
+    except subprocess.CalledProcessError as e:
+        click.echo("Error: Upgrade failed.", err=True)
+        click.echo(e.stderr, err=True)
+        sys.exit(1)

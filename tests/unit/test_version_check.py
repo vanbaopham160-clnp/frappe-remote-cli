@@ -83,3 +83,44 @@ def test_no_print_if_same_version(clean_cache_path):
     with patch("requests.get", return_value=mock_res), patch("click.echo") as mock_echo:
         check_for_updates()
         mock_echo.assert_not_called()
+
+
+def test_update_already_up_to_date():
+    from frappe_cli.cli import main
+    from click.testing import CliRunner
+
+    runner = CliRunner()
+    with patch("frappe_cli.version_check.fetch_latest_pypi_version", return_value=__version__):
+        res = runner.invoke(main, ["update"])
+        assert res.exit_code == 0
+        assert "already up to date" in res.output
+
+
+def test_update_check_only():
+    from frappe_cli.cli import main
+    from click.testing import CliRunner
+
+    runner = CliRunner()
+    with patch("frappe_cli.version_check.fetch_latest_pypi_version", return_value="99.9.9"):
+        res = runner.invoke(main, ["update", "--check"])
+        assert res.exit_code == 0
+        assert "A new version is available" in res.output
+        assert "Upgrading" not in res.output
+
+
+def test_update_upgrade_yes():
+    from frappe_cli.cli import main
+    from click.testing import CliRunner
+    import subprocess
+
+    runner = CliRunner()
+    mock_run = MagicMock()
+    mock_run.stdout = "Upgraded package successfully"
+    
+    with patch("frappe_cli.version_check.fetch_latest_pypi_version", return_value="99.9.9"), \
+         patch("subprocess.run", return_value=mock_run) as mock_sub:
+        res = runner.invoke(main, ["update", "--yes"])
+        assert res.exit_code == 0
+        assert "Upgraded package successfully" in res.output
+        assert "Upgrade completed successfully!" in res.output
+        mock_sub.assert_called_once()

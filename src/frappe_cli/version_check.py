@@ -8,6 +8,22 @@ from frappe_cli import __version__
 VERSION_CHECK_CACHE_PATH = os.path.expanduser("~/.config/frappe-cli/version.json")
 
 
+def parse_version(v):
+    """Helper to parse a version string into a comparison-friendly integer tuple."""
+    return tuple(int(x) for x in str(v).split(".") if x.isdigit())
+
+
+def fetch_latest_pypi_version(timeout: float = 3.0) -> str:
+    """Fetch the latest version of the package directly from PyPI (bypassing cache)."""
+    try:
+        res = requests.get("https://pypi.org/pypi/frappe-remote-cli/json", timeout=timeout)
+        if res.status_code == 200:
+            return res.json().get("info", {}).get("version")
+    except Exception:
+        pass
+    return None
+
+
 def check_for_updates():
     """Checks PyPI for a newer version of frappe-remote-cli.
 
@@ -33,26 +49,19 @@ def check_for_updates():
 
     # 2. Check PyPI if cache is older than 24 hours (86400 seconds)
     if now - last_check > 86400:
-        try:
-            # Short timeout to avoid blocking CLI
-            res = requests.get("https://pypi.org/pypi/frappe-remote-cli/json", timeout=1.0)
-            if res.status_code == 200:
-                pypi_version = res.json().get("info", {}).get("version")
-                if pypi_version:
-                    latest_version = pypi_version
-                    # Write updated cache
-                    os.makedirs(os.path.dirname(VERSION_CHECK_CACHE_PATH), exist_ok=True)
-                    with open(VERSION_CHECK_CACHE_PATH, "w") as f:
-                        json.dump({"last_check": now, "latest_version": latest_version}, f)
-        except Exception:
-            # Suppress network errors/timeouts to avoid interrupting CLI usage
-            pass
+        pypi_version = fetch_latest_pypi_version(timeout=1.0)
+        if pypi_version:
+            latest_version = pypi_version
+            try:
+                # Write updated cache
+                os.makedirs(os.path.dirname(VERSION_CHECK_CACHE_PATH), exist_ok=True)
+                with open(VERSION_CHECK_CACHE_PATH, "w") as f:
+                    json.dump({"last_check": now, "latest_version": latest_version}, f)
+            except Exception:
+                pass
 
-    # 3. Compare version numbers (simple semver check)
+    # 3. Compare version numbers
     try:
-        def parse_version(v):
-            return tuple(int(x) for x in str(v).split(".") if x.isdigit())
-
         if parse_version(latest_version) > parse_version(__version__):
             click.echo(
                 click.style(
