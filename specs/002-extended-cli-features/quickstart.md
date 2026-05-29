@@ -42,10 +42,10 @@ Examine the full, live database schema of a doctype, including customized standa
 
 ```bash
 # Display schema fields as a structured table
-frappe-cli schema "Sales Invoice"
+frappe-cli schema "Sales Invoice" --table
 
-# Output fields array only as compact JSON
-frappe-cli schema "Sales Invoice" --json --keys fields
+# Output schema as JSON
+frappe-cli schema "Sales Invoice"
 ```
 
 ---
@@ -55,8 +55,8 @@ frappe-cli schema "Sales Invoice" --json --keys fields
 Execute server-side reports and view the results in the terminal:
 
 ```bash
-# Run a financial report with filters
-frappe-cli report "General Ledger" --filters '{"company": "My Company", "from_date": "2026-01-01"}' --limit 10
+# Run a financial report with parameters and view as a formatted table
+frappe-cli report "General Ledger" -p company "My Company" -p from_date "2026-01-01" --table
 ```
 
 ---
